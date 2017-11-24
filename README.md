@@ -8,3 +8,5 @@ How to Use:
 3.The target layer should be a rectangle has the same name with the artboards of the current page.  
 4.Every source artboard should named different.  
 5.Select the source page and run the plugin.  
+
+!(https://github.com/etrobot/SimpleMockup-for-Sketch/blob/master/demo.png)
