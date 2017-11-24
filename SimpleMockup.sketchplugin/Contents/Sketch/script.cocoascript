@@ -1,0 +1,139 @@
+          var onRun = function(context) {
+          var doc = context.document;
+var command = context.command;
+
+var kPluginDomain = "com.ztfs.sketch-plugins.flatten";
+
+var selectedLayer = context.selection.firstObject();
+var tempFolderPath = getTempFolderPath();
+var pages = doc.pages();
+
+function getTempFolderPath(withName) {
+    var fileManager = [NSFileManager defaultManager]
+    var cachesURL = [[fileManager URLsForDirectory: NSCachesDirectory inDomains: NSUserDomainMask] lastObject]
+    if (typeof withName !== 'undefined') return [[cachesURL URLByAppendingPathComponent: kPluginDomain] path] + "/" + withName
+    return [[cachesURL URLByAppendingPathComponent: kPluginDomain] path]]
+}
+
+for (var i = 0; i < pages.count(); i++) {
+    if(pages[i].name().indexOf("#Mockup")==0){
+        for(var ii = 0; ii<pages[i].artboards().count();ii++){
+            mockupAB = pages[i].artboards()[ii];
+            if(mockupAB.name().indexOf("#")!==0)continue;
+            for(var j = 0; j < mockupAB.children().count(); j++){
+                if(mockupAB.children()[j].className() == "MSArtboardGroup")
+                    continue;
+                for(var jj=0; jj<doc.currentPage().artboards().count();jj++){
+                    var name1 = mockupAB.children()[j].name()
+                    var name2 = doc.currentPage().artboards()[jj].name());
+                    if(name1.indexOf(name2)==0 && name1.length()==name2.length()){
+                        flatten(doc.currentPage().artboards()[jj],mockupAB.children()[j])
+                    }
+                }
+            }
+            break;
+        }
+    }
+}
+
+cleanUpTempFolder(tempFolderPath)
+
+
+function exportLayerToPath(layer, path, scale, format, suffix) {
+
+    var exportSize
+    if (getSketchVersionNumber() >= 350) {
+        [[layer exportOptions] addExportFormat]
+        exportSize = [[[layer exportOptions] exportFormats] lastObject]
+    } else {
+        [[layer exportOptions] addExportSize]
+        exportSize = [[[[layer exportOptions] sizes] array] lastObject]
+    }
+    var rect = [[layer absoluteRect] rect],
+        scale = (typeof scale !== 'undefined') ? scale : 1,
+        suffix = (typeof suffix !== 'undefined') ? suffix : "",
+        format = (typeof format !== 'undefined') ? format : "png"
+    exportSize.scale = scale
+    exportSize.name = suffix
+    exportSize.format = format
+    if (getSketchVersionNumber() >= 350) {
+        var slice = [MSExportRequest exportRequestFromExportFormat: exportSize layer: layer inRect: rect useIDForName: false]
+    } else {
+        var slice = [MSSliceMaker sliceFromExportSize: exportSize layer: layer inRect: rect useIDForName: false]
+    }
+    [doc saveArtboardOrSlice: slice toFile: path]
+    [exportSize remove]
+    slice = nil
+    exportSize = nil
+    return {
+        x: Math.round(rect.origin.x),
+        y: Math.round(rect.origin.y),
+        width: Math.round(rect.size.width),
+        height: Math.round(rect.size.height)
+    }
+}
+
+function setBitmapFill(layer, imagePath) {
+    log(layer.name())
+    var image = [[NSImage alloc] initWithContentsOfFile: imagePath]
+    var imageData
+    if (MSApplicationMetadata.metadata().appVersion < 47) {
+        var imageData = MSImageData.alloc().initWithImage_convertColorSpace(image, false);
+    } else {
+        var imageData = MSImageData.alloc().initWithImage(image);
+    }
+    if (image && [layer class] == MSShapeGroup) {
+        layer.style().setFills([[NSArray alloc] init])
+        var fills = layer.style().fills()
+        var bmpFill
+        bmpFill = layer.style().addStylePartOfType(0)
+        [bmpFill setFillType: 4]
+        [bmpFill setImage: imageData]
+        [bmpFill setPatternFillType: 1]
+    }
+}
+
+function cleanUpTempFolder(folderPath) {
+    [[NSFileManager defaultManager] removeItemAtPath: folderPath error: nil]
+}
+
+function createImageLayer(referenceLayer, name, parent) {
+
+    var rectangleShape = MSRectangleShape.alloc().init()
+    var f = referenceLayer.frame()
+    var frame = MSRect.rectWithRect(NSMakeRect(f.x(), f.y(), f.width(), f.height()))
+    if ([referenceLayer class] === MSArtboardGroup) {
+        frame.x = 0
+        frame.y = 0
+    }
+    rectangleShape.frame = frame
+    var imageLayer = MSShapeGroup.shapeWithPath(rectangleShape)
+    parent.addLayers([imageLayer])
+    [command setValue: true forKey: kImageLayerKey onLayer: imageLayer]
+    [imageLayer setName: name]
+    log('layer ' + referenceLayer.name + ' is selected.')
+    return imageLayer
+}
+
+function getSketchVersionNumber() {
+
+    const version = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleShortVersionString"]
+    var versionNumber = version.stringByReplacingOccurrencesOfString_withString(".", "") + ""
+    while (versionNumber.length != 3) {
+        versionNumber += "0"
+    }
+    return parseInt(versionNumber)
+}
+
+function flatten(refArtboard,tarLayer) {
+    var filePath = tempFolderPath + "/"+ refArtboard.name()+ ".png";
+    var r = refArtboard.rect();
+    r.origin.x = tarLayer.origin.x;
+    r.origin.y = tarLayer.origin.y;
+    tarLayer.setRect(r);
+    exportLayerToPath(refArtboard, filePath);
+    log(filePath)
+    setBitmapFill(tarLayer, filePath);
+}
+          };
+          

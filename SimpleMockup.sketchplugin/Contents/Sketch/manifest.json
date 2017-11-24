@@ -1,0 +1,26 @@
+{
+  "author" : "Frank Lin",
+  "commands" : [
+    {
+      "script" : "script.cocoascript",
+      "name" : "SimpleMockup",
+      "handlers" : {
+        "run" : "onRun"
+      },
+      "identifier" : "SimpleMockup"
+    }
+  ],
+  "menu" : {
+    "title" : "SimpleMockup",
+    "isRoot": true,
+    "items" : [
+      "SimpleMockup"
+    ],
+    "title" : "SimpleMockup"
+  },
+  "identifier" : "com.ztfs.sketch-plugins.simplemockup",
+  "version" : "1.0",
+  "description" : "simple mockup",
+  "authorEmail" : "g360@foxmmail.com",
+  "name" : "SimpleMockup"
+}
