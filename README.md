@@ -9,4 +9,4 @@ How to Use:
 4.Every source artboard should named different.  
 5.Select the source page and run the plugin.  
 
-(http://github.com/etrobot/SimpleMockup-for-Sketch/raw/master/demo.png)
+![](http://github.com/etrobot/SimpleMockup-for-Sketch/raw/master/demo.png)
